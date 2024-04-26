@@ -73,7 +73,7 @@ def create_sequences(features, labels, window_size):
     return np.array(X), np.array(y)
 
 # Crear secuencias
-window_size = 24
+window_size = 12
 X, y = create_sequences(features_selected_scaled_df, datos_Maestro['ENSA'], window_size=24)
 
 # Dividir los datos en entrenamiento y validación
