@@ -32,6 +32,9 @@ datos_Maestro.set_index('fecha', inplace=True)
 features = datos_Maestro.drop(['ENSA', 'dummy'], axis=1)  # Excluir columnas no necesarias
 labels = datos_Maestro['ENSA']
 
+# Crear la nueva característica combinada(cambio1)
+datos_Maestro['combined_feature'] = datos_Maestro['Panama'] / datos_Maestro['PIB__corriente']
+
 # Escalar las características
 scaler = StandardScaler()
 features_scaled = scaler.fit_transform(features)
@@ -70,24 +73,24 @@ def create_sequences(features, labels, window_size):
     return np.array(X), np.array(y)
 
 # Crear secuencias
-window_size = 6
-X, y = create_sequences(features_selected_scaled_df, datos_Maestro['ENSA'], window_size=12)
+window_size = 24
+X, y = create_sequences(features_selected_scaled_df, datos_Maestro['ENSA'], window_size=24)
 
 # Dividir los datos en entrenamiento y validación
-X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.05, random_state=42)
 
 # Definir la arquitectura del modelo
 model = Sequential([
     InputLayer(input_shape=(X_train.shape[1], X_train.shape[2])),
-    GRU(50, activation='relu', return_sequences=True),
-    GRU(50, activation='relu'),
-    Dense(20, activation='relu'),
+    GRU(150, activation='relu', return_sequences=True),
+    GRU(150, activation='relu'),
+    Dense(50, activation='relu'),
     Dense(1)
 ])
 
 # Compilar y entrenar el modelo
 model.compile(optimizer='adam', loss='mean_squared_error')
-history = model.fit(X_train, y_train, epochs=30, batch_size=32, validation_data=(X_val, y_val))
+history = model.fit(X_train, y_train, epochs=50, batch_size=64, validation_data=(X_val, y_val))
 
 # Graficar la historia de entrenamiento
 plt.plot(history.history['loss'], label='train')
@@ -138,6 +141,11 @@ predicted_data.set_index('fecha', inplace=True)
 # Graficar los resultados
 plt.figure(figsize=(32, 12))
 plt.plot(datos_Maestro.index, datos_Maestro['ENSA'], label='Historical ENSA', color='blue')
+# Extraer el último punto de los datos históricos para conectarlo con las predicciones
+last_historical_value = datos_Maestro['ENSA'].iloc[-1]
+last_historical_index = datos_Maestro.index[-1]
+# Conectar el último punto de los datos históricos con el primer punto de la predicción
+plt.plot([last_historical_index, predicted_data.index[0]], [last_historical_value, predicted_data['ENSA_pred'].iloc[0]], color='blue')
 plt.plot(predicted_data.index, predicted_data['ENSA_pred'], label='Predicted ENSA for 2024', color='red', linestyle='--')
 plt.title('Historical and Predicted ENSA from 2010 to mid-2024')
 plt.xlabel('Date')
