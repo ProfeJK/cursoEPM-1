@@ -28,6 +28,9 @@ datos_Maestro = pd.read_csv(file_path)
 datos_Maestro['fecha'] = pd.to_datetime(datos_Maestro['fecha'])
 datos_Maestro.set_index('fecha', inplace=True)
 
+# Calcular una nueva característica
+datos_Maestro['ProdENSAPanama'] = datos_Maestro['ENSA'] * datos_Maestro['Panama']
+
 # Preparación de datos
 features = datos_Maestro.drop(['ENSA', 'dummy'], axis=1)  # Excluir columnas no necesarias
 labels = datos_Maestro['ENSA']
@@ -41,6 +44,12 @@ datos_Maestro.describe()
 
 # Calcular la matriz de correlación
 correlation_matrix = datos_Maestro.corr()
+
+# Graficar la matriz de correlación utilizando Seaborn
+plt.figure(figsize=(12, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', vmin=-1, vmax=1)
+plt.title('Matriz de Correlación')
+plt.show()
 
 # Considerar solo las correlaciones con respecto a 'ENSA'
 correlation_with_ENSA = correlation_matrix['ENSA'].sort_values(ascending=False)
@@ -144,4 +153,18 @@ plt.xlabel('Date')
 plt.ylabel('ENSA')
 plt.legend()
 plt.grid(True)
+plt.show()
+
+# Graficar los resultados de otro modo.
+plt.figure(figsize=(12, 6))
+plt.plot(datos_Maestro.index, datos_Maestro['ENSA'], label='Historical ENSA', color='blue', marker='o')
+plt.plot(predicted_data.index, predicted_data['ENSA_pred'], label='Predicted ENSA for 2024', color='red', linestyle='--', marker='s')
+plt.plot([datos_Maestro.index[-1], predicted_data.index[0]], [datos_Maestro['ENSA'].iloc[-1], predicted_data['ENSA_pred'].iloc[0]], color='green', linestyle='-', marker='^')  # Línea uniendo el último punto real con el primer punto pronosticado
+plt.title('Historical and Predicted ENSA with Connection Line')
+plt.xlabel('Date')
+plt.ylabel('ENSA')
+plt.legend()
+plt.grid(True)
+plt.xticks(rotation=45)  # Rotar etiquetas del eje x para mejor legibilidad
+plt.tight_layout()  # Ajustar el diseño para evitar superposiciones
 plt.show()
